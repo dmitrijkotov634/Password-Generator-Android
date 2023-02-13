@@ -6,6 +6,7 @@ import android.content.ClipboardManager
 import android.os.Bundle
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.content.ContextCompat
 import com.google.android.material.color.DynamicColors
 import com.google.android.material.slider.Slider
 import com.tr3ble.passwordgenerator.databinding.ActivityMainBinding
@@ -16,6 +17,8 @@ class MainActivity : AppCompatActivity() {
     private val binding: ActivityMainBinding by lazy {
         ActivityMainBinding.inflate(layoutInflater)
     }
+
+    private var currentPassword: String = ""
 
     @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -42,18 +45,20 @@ class MainActivity : AppCompatActivity() {
                 range.random(random)
             }
 
-            binding.passwordTextView.text = "Password: ${password.joinToString("")}"
+            currentPassword = password.joinToString("")
+            binding.passwordTextView.text = "Password: $currentPassword"
         }
 
         binding.copyButton.setOnClickListener {
-            val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+            val clipboard =
+                ContextCompat.getSystemService(applicationContext, ClipboardManager::class.java)
             val clip = ClipData.newPlainText(
                 "Password",
-                binding.passwordTextView.text.toString().substring(10)
+                currentPassword
             )
             if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU)
-                Toast.makeText(this, "Password copied to clipboard", Toast.LENGTH_SHORT).show()
-            clipboard.setPrimaryClip(clip)
+                Toast.makeText(this, R.string.copied, Toast.LENGTH_SHORT).show()
+            clipboard?.setPrimaryClip(clip)
         }
 
         setContentView(binding.root)

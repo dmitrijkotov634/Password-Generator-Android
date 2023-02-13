@@ -3,4 +3,5 @@
     <string name="password_length_hint" translatable="false">8.0</string>
     <string name="generate">Generate</string>
     <string name="copy">Copy</string>
+    <string name="copied">Password copied to clipboard</string>
 </resources>
