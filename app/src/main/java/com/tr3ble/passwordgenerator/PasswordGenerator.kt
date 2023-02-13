@@ -1,76 +1,63 @@
 package com.tr3ble.passwordgenerator
 
+import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.os.Bundle
-import android.view.View
-import android.widget.SeekBar
-import android.widget.Button
-import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.android.material.color.DynamicColors
+import com.google.android.material.slider.Slider
+import com.tr3ble.passwordgenerator.databinding.ActivityMainBinding
 import kotlin.random.Random
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var passwordTextView: TextView
-    private lateinit var passwordLengthSeekBar: SeekBar
-    private lateinit var passwordLengthTextView: TextView
-    private lateinit var generateButton: Button
-    private lateinit var copyButton: Button
-    private val passwordLengthSeekBarListener = object : SeekBar.OnSeekBarChangeListener {
-        override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-            passwordLengthTextView.text = (progress).toString()
-        }
-
-        override fun onStartTrackingTouch(seekBar: SeekBar?) {}
-        override fun onStopTrackingTouch(seekBar: SeekBar?) {}
-    }
-    private val passwordGenerationListener = View.OnClickListener {
-        generatePassword()
-    }
-    private val passwordCopyListener = View.OnClickListener {
-        copyPasswordToClipboard()
+    private val binding: ActivityMainBinding by lazy {
+        ActivityMainBinding.inflate(layoutInflater)
     }
 
+    @SuppressLint("SetTextI18n")
     override fun onCreate(savedInstanceState: Bundle?) {
+        DynamicColors.applyToActivityIfAvailable(this)
+
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
-        initViews()
-        setListeners()
-    }
 
-    private fun initViews() {
-        passwordTextView = findViewById(R.id.password_text_view)
-        passwordLengthSeekBar = findViewById(R.id.password_length_seek_bar)
-        passwordLengthTextView = findViewById(R.id.password_length_text_view)
-        generateButton = findViewById(R.id.generate_button)
-        copyButton = findViewById(R.id.copy_button)
-        passwordLengthSeekBar.setOnSeekBarChangeListener(passwordLengthSeekBarListener)
-        copyButton.visibility = View.GONE
-    }
+        binding.passwordLengthSeekBar.addOnSliderTouchListener(object :
+            Slider.OnSliderTouchListener {
+            override fun onStartTrackingTouch(slider: Slider) {}
 
-    private fun setListeners() {
-        generateButton.setOnClickListener(passwordGenerationListener)
-        copyButton.setOnClickListener(passwordCopyListener)
-    }
+            override fun onStopTrackingTouch(slider: Slider) {
+                binding.passwordLengthTextView.text = slider.value.toString()
+                binding.generateButton.callOnClick()
+            }
+        })
 
-    private fun generatePassword() {
-        val random = Random
-        val passwordLength = passwordLengthSeekBar.progress
-        val password = CharArray(passwordLength) {
-            val ranges = listOf('a'..'z', 'A'..'Z', '0'..'9')
-            val range = ranges.random(random)
-            range.random(random)
+        binding.generateButton.setOnClickListener {
+            val random = Random
+            val passwordLength = binding.passwordLengthSeekBar.value.toInt()
+            val password = CharArray(passwordLength) {
+                val ranges = listOf('a'..'z', 'A'..'Z', '0'..'9')
+                val range = ranges.random(random)
+                range.random(random)
+            }
+
+            binding.passwordTextView.text = "Password: ${password.joinToString("")}"
         }
-        passwordTextView.text = "Password: ${password.joinToString("")}"
-        copyButton.visibility = View.VISIBLE
-    }
 
-    private fun copyPasswordToClipboard() {
-        val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
-        val clip = ClipData.newPlainText("Password", passwordTextView.text.toString().substring(10))
-        Toast.makeText(this, "Password copied to clipboard", Toast.LENGTH_SHORT).show()
-        clipboard.setPrimaryClip(clip)
+        binding.copyButton.setOnClickListener {
+            val clipboard = getSystemService(CLIPBOARD_SERVICE) as ClipboardManager
+            val clip = ClipData.newPlainText(
+                "Password",
+                binding.passwordTextView.text.toString().substring(10)
+            )
+            if (android.os.Build.VERSION.SDK_INT < android.os.Build.VERSION_CODES.TIRAMISU)
+                Toast.makeText(this, "Password copied to clipboard", Toast.LENGTH_SHORT).show()
+            clipboard.setPrimaryClip(clip)
+        }
+
+        setContentView(binding.root)
+
+        binding.generateButton.callOnClick()
     }
 }
